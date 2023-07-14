@@ -1,7 +1,6 @@
 package com.programmers.gccoffee.repository;
 
 import static com.programmers.gccoffee.repository.JdbcUtils.toLocalDateTime;
-import static com.programmers.gccoffee.repository.JdbcUtils.toUUID;
 
 import com.programmers.gccoffee.model.Category;
 import com.programmers.gccoffee.model.Product;
@@ -21,7 +20,7 @@ import org.springframework.stereotype.Repository;
 public class ProductJdbcRepository implements ProductRepository {
 
     private static final RowMapper<Product> productRowMapper = ((rs, rowNum) -> {
-        UUID productId = toUUID(rs.getBytes("product_id"));
+        UUID productId = (UUID) rs.getObject("product_id");
         String productName = rs.getString("product_name");
         Category category = Category.valueOf(rs.getString("category"));
         long price = rs.getLong("price");
@@ -41,7 +40,7 @@ public class ProductJdbcRepository implements ProductRepository {
     @Override
     public Product insert(Product product) {
         String sql = "insert into products(product_id, product_name, category, price, description, created_at, updated_at) "
-                + "values(UUID_TO_BIN(:productId), :productName, :category, :price, :description, :createdAt, :updatedAt)";
+                + "values(:productId, :productName, :category, :price, :description, :createdAt, :updatedAt)";
 
         int insertCounts = template.update(sql, toParamMap(product));
 
@@ -75,7 +74,7 @@ public class ProductJdbcRepository implements ProductRepository {
 
     @Override
     public Optional<Product> findByName(String productName) {
-        String sql = "select * from products where product_name = UUID_TO_BIN(:productName)";
+        String sql = "select * from products where product_name = :productName";
         Map<String, Object> paramMap = Map.of("productName", productName);
 
         try {
@@ -98,7 +97,7 @@ public class ProductJdbcRepository implements ProductRepository {
     @Override
     public Product update(Product product) {
         String sql = "update products set product_name = :productName, category = :category, price = :price, description = :description, created_at = :createdAt, updated_at = :updatedAt"
-                + "where product_id = UUID_TO_BIN(:productID)";
+                + "where product_id = :productID";
 
         int updateCounts = template.update(sql, toParamMap(product));
 
@@ -118,7 +117,7 @@ public class ProductJdbcRepository implements ProductRepository {
     private Map<String, Object> toParamMap(Product product) {
         Map<String, Object> paramMap = new HashMap<>();
 
-        paramMap.put("productId", product.getProductId().toString().getBytes());
+        paramMap.put("productId", product.getProductId());
         paramMap.put("productName", product.getProductName());
         paramMap.put("category", product.getCategory().toString());
         paramMap.put("price", product.getPrice());
