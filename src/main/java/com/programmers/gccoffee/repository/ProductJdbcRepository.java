@@ -6,12 +6,17 @@ import static com.programmers.gccoffee.repository.JdbcUtils.toUUID;
 import com.programmers.gccoffee.model.Category;
 import com.programmers.gccoffee.model.Product;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import javax.sql.DataSource;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class ProductJdbcRepository implements ProductRepository {
 
     private static final RowMapper<Product> productRowMapper = ((rs, rowNum) -> {
@@ -28,13 +33,21 @@ public class ProductJdbcRepository implements ProductRepository {
 
     private final NamedParameterJdbcTemplate template;
 
-    public ProductJdbcRepository(NamedParameterJdbcTemplate template) {
-        this.template = template;
+    public ProductJdbcRepository(DataSource dataSource) {
+        this.template = new NamedParameterJdbcTemplate(dataSource);
     }
 
     @Override
     public Product insert(Product product) {
-        return null;
+        String sql = "insert into products(product_id, product_name, category, price, description, created_at, updated_at) "
+                + "values(UUID_TO_BIN(:productId), :productName, :category, :price, :description, :createdAt, :updatedAt)";
+        int updateCounts = template.update(sql, toParamMap(product));
+
+        if (updateCounts < 1) {
+            throw new RuntimeException("Nothing was inserted.");
+        }
+
+        return product;
     }
 
     @Override
@@ -67,5 +80,19 @@ public class ProductJdbcRepository implements ProductRepository {
     @Override
     public void deleteAll() {
 
+    }
+
+    private Map<String, Object> toParamMap(Product product) {
+        Map<String, Object> paramMap = new HashMap<>();
+
+        paramMap.put("productId", product.getProductId().toString().getBytes());
+        paramMap.put("productName", product.getProductName());
+        paramMap.put("category", product.getCategory().toString());
+        paramMap.put("price", product.getPrice());
+        paramMap.put("description", product.getDescription());
+        paramMap.put("createdAt", product.getCreatedAt());
+        paramMap.put("updatedAt", product.getUpdatedAt());
+
+        return paramMap;
     }
 }
