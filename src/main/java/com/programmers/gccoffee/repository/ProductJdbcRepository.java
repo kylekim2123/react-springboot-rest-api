@@ -42,9 +42,10 @@ public class ProductJdbcRepository implements ProductRepository {
     public Product insert(Product product) {
         String sql = "insert into products(product_id, product_name, category, price, description, created_at, updated_at) "
                 + "values(UUID_TO_BIN(:productId), :productName, :category, :price, :description, :createdAt, :updatedAt)";
-        int updateCounts = template.update(sql, toParamMap(product));
 
-        if (updateCounts < 1) {
+        int insertCounts = template.update(sql, toParamMap(product));
+
+        if (insertCounts < 1) {
             throw new RuntimeException("Nothing was inserted.");
         }
 
@@ -96,7 +97,16 @@ public class ProductJdbcRepository implements ProductRepository {
 
     @Override
     public Product update(Product product) {
-        return null;
+        String sql = "update products set product_name = :productName, category = :category, price = :price, description = :description, created_at = :createdAt, updated_at = :updatedAt"
+                + "where product_id = UUID_TO_BIN(:productID)";
+
+        int updateCounts = template.update(sql, toParamMap(product));
+
+        if (updateCounts < 1) {
+            throw new RuntimeException("Nothing was updated.");
+        }
+
+        return product;
     }
 
     @Override
