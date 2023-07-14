@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import javax.sql.DataSource;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -59,17 +60,38 @@ public class ProductJdbcRepository implements ProductRepository {
 
     @Override
     public Optional<Product> findById(UUID productId) {
-        return Optional.empty();
+        String sql = "select * from products where product_id = UUID_TO_BIN(:productId)";
+        Map<String, Object> paramMap = Map.of("productId", productId.toString().getBytes());
+
+        try {
+            Product product = template.queryForObject(sql, paramMap, productRowMapper);
+
+            return Optional.of(product);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public Optional<Product> findByName(String productName) {
-        return Optional.empty();
+        String sql = "select * from products where product_name = UUID_TO_BIN(:productName)";
+        Map<String, Object> paramMap = Map.of("productName", productName);
+
+        try {
+            Product product = template.queryForObject(sql, paramMap, productRowMapper);
+
+            return Optional.of(product);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public List<Product> findByCategory(Category category) {
-        return null;
+        String sql = "select * from products where category = :category";
+        Map<String, Object> paramMap = Map.of("category", category.toString());
+
+        return template.query(sql, paramMap, productRowMapper);
     }
 
     @Override
