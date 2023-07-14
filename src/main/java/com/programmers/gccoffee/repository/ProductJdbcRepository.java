@@ -101,7 +101,8 @@ public class ProductJdbcRepository implements ProductRepository {
 
     @Override
     public void deleteAll() {
-
+        String sql = "delete from products";
+        template.update(sql, Map.of());
     }
 
     private Map<String, Object> toParamMap(Product product) {
