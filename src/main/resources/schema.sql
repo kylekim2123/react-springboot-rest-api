@@ -10,7 +10,7 @@ CREATE TABLE products(
     description VARCHAR(500) DEFAULT NULL,
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) DEFAULT NULL
-)
+);
 
 CREATE TABLE orders(
     order_id UUID PRIMARY KEY,
